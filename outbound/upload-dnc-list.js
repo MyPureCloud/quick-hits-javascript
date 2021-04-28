@@ -11,6 +11,7 @@ function uploadDNCLists(file) {
    data.append('file', file);
    data.append('fileType', 'dnclist');
    data.append('phoneColumns', 'PhoneColumnName');
+   data.append('emailColumns', 'EmailColumnName');
 
    $.ajax({
        url: 'https://apps.mypurecloud.com/uploads/v2/contactlist',

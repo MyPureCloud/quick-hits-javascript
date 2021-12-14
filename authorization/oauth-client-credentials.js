@@ -27,9 +27,9 @@ function handleTokenCallback(body){
     })
     .catch(e => console.error(e));
 }
-// >> START oauth-client-credentials-step-2
+// >> END oauth-client-credentials-step-2
 
-// >> START oauth-client-credentials-step-1
+// >> START oauth-client-credentials-step-1 
 // Genesys Cloud Authentication
 const params = new URLSearchParams();
 params.append('grant_type', 'client_credentials');
@@ -42,7 +42,7 @@ fetch(`https://login.${environment}/oauth/token`, {
     },
     body: params
 })
-// >> END oauth-client-credentials-step-1
+// >> END oauth-client-credentials-step-1 
 .then(res => {
     if(res.ok){
         return res.json();

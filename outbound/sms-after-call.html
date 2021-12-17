@@ -1,0 +1,162 @@
+<html>
+    <head>
+        <title>Auto Send SMS</title>
+
+        <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+        <script src="https://sdk-cdn.mypurecloud.com/javascript/latest/purecloud-platform-client-v2.min.js"></script>
+    </head>
+
+    <body>
+        <div>
+            <label id="state">Status: </label>
+            <label id="stateVal"></label>
+        </div>
+
+        <script type="text/javascript">
+            // >> START sms-after-call
+            // Set Genesys Cloud objects
+            const platformClient = require('platformClient');
+            const client = platformClient.ApiClient.instance;
+            const conversationsApi = new platformClient.ConversationsApi();
+            const notificationsApi = new platformClient.NotificationsApi();
+
+            // Initialize variables
+            let clientId = '--- IMPLICT GRANT CLIENT ID ---';
+            let queueId = '--- QUEUE ID ---';
+            let redirectUri = 'http://localhost:8080/index.html';
+
+            let dropOffMessage = 'Message sent upon dropping off the call.';
+            let sendAttemptOngoing = false;
+            let conversationId,
+                communicationId,
+                callState,
+                callConversationId,
+                participantId,
+                userPresenceTopic;
+
+            $(document).ready(function () {
+                // >> START sms-after-call-step-1
+                // Genesys Cloud Authorization
+                client.setEnvironment(platformClient.PureCloudRegionHosts.us_east_1);
+                client.setPersistSettings(true, 'sample-app');
+
+                client
+                .loginImplicitGrant(clientId, redirectUri)
+                // >> END sms-after-call-step-1
+                .then(() => {
+                    console.log('Logged in');
+
+                    // >> START sms-after-call-step-2
+                    // Create notification channel
+                    return notificationsApi.postNotificationsChannels();
+                })
+                .then((data) => {
+                    let channelId = data.id;
+                    let connectionUri = data.connectUri;
+                    userPresenceTopic = `v2.routing.queues.${queueId}.conversations.calls`;
+
+                    // Create a new webSocket object
+                    let webSocket = new WebSocket(connectionUri);
+                    document.getElementById('stateVal').innerHTML = 'No incoming call at the moment.';
+
+                    // If a message is recieve notificationMesssage function will be called
+                    webSocket.onmessage = notificationMessage;
+
+                    // Subscribe to a topic
+                    let body = [
+                    {
+                        id: userPresenceTopic,
+                    },
+                    ];
+                    notificationsApi.putNotificationsChannelSubscriptions(channelId, body);
+                    // >> END sms-after-call-step-2
+                })
+                .catch((err) => console.log(err));
+            });
+
+            // >> START sms-after-call-step-3
+            // Call this function when the webSocket recieves a message
+            function notificationMessage(message) {
+                let notification = JSON.parse(message.data);
+                console.log(notification);
+
+                // Check notification topicname
+                if (notification.topicName.toLowerCase() === userPresenceTopic.toLowerCase()) {
+                let customerInfo = notification.eventBody.participants.find((participant) => participant.purpose === 'customer');
+                if (!customerInfo) return;
+
+                callConversationId = notification.eventBody.id;
+                callState = notification.eventBody.participants[0].state;
+                participantId = customerInfo.id;
+                customerAddress = customerInfo.address;
+                customerAddress = customerAddress.slice(4, customerAddress.length);
+
+                document.getElementById('stateVal').innerHTML = callState + ' to ' + customerAddress;
+
+                // Check if messageSent attribute has been added
+                let messageSent = customerInfo.attributes.messageSent ? true : false;
+
+                // Check if all attributes are align
+                if (callState === 'disconnected' && !messageSent && !sendAttemptOngoing) {
+                    sendAttemptOngoing = true;
+
+                    // Call sms sending function
+                    sendSms(customerAddress).then(() => {
+                    sendAttemptOngoing = false;
+                    });
+                }
+                }
+            }
+            // >> END sms-after-call-step-3
+
+            // >> START sms-after-call-step-4
+            // Call this function to send SMS
+            function sendSms(toAddress) {
+                let body = {
+                queueId: queueId,
+                toAddress: toAddress,
+                toAddressMessengerType: 'sms',
+                useExistingConversation: true,
+                };
+                console.log('Sending SMS...');
+
+                // Create interaction
+                return conversationsApi
+                .postConversationsMessages(body)
+                .then((data) => {
+                    conversationId = data.id;
+                    console.log(conversationId);
+
+                    // Get conversation id
+                    return conversationsApi.getConversation(conversationId);
+                })
+                // >> END sms-after-call-step-4
+
+                // >> START sms-after-call-step-5
+                .then((data) => {
+                    let agent = data.participants.find((p) => p.purpose === 'agent');
+                    communicationId = agent.messages[0].id;
+
+                    let body = { textBody: dropOffMessage, };
+                    // Send message
+                    return conversationsApi.postConversationsMessageCommunicationMessages(conversationId, communicationId, body);
+                })
+                .then((data) => {
+                    document.getElementById('stateVal').innerHTML = 'SMS successfully sent to: ' + data.toAddress;
+
+                    // Create participant attribute
+                    let body = { attributes: { messageSent: true }, };
+
+                    console.log(callConversationId + '  ' + participantId);
+                    return conversationsApi.patchConversationParticipantAttributes(callConversationId, participantId, body);
+                })
+                .then(() => {
+                    console.log('Successfully update conversation.');
+                })
+                // >> END sms-after-call-step-5
+                .catch((err) => console.log(err));
+            }
+            // >> END sms-after-call
+        </script>
+    </body>
+</html>

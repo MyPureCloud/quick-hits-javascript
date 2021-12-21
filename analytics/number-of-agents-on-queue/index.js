@@ -1,4 +1,4 @@
-// >> START number-of-agent-in-queue
+// >> START number-of-agents-on-queue
 // Set Genesys cloud objects
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;
@@ -11,11 +11,11 @@ const CLIENT_ID = process.env.GENESYS_CLOUD_CLIENT_ID;
 const CLIENT_SECRET = process.env.GENESYS_CLOUD_CLIENT_SECRET;
 const ORG_REGION = process.env.GENESYS_CLOUD_REGION; // eg. us_east_1
 
-// >> START number-of-agent-in-queue-step-2
+// >> START number-of-agents-on-queue-step-2
 // Instantiate API
 let routingApi = new platformClient.RoutingApi();
 let analyticsApi = new platformClient.AnalyticsApi();
-// >> END number-of-agent-in-queue-step-2
+// >> END number-of-agents-on-queue-step-2
 
 // Declare global variables
 let queueId = '';
@@ -43,7 +43,7 @@ function inputQueueName() {
     });
 }
 
-// >> START number-of-agent-in-queue-step-3
+// >> START number-of-agents-on-queue-step-3
 // Get Queue ID from name
 function getQueueId(name){
     return routingApi.getRoutingQueues({
@@ -94,15 +94,15 @@ function getOnQueueAgentsCount() {
     })
     .catch((err) => console.error(err));
 }
-// >> END number-of-agent-in-queue-step-3
+// >> END number-of-agents-on-queue-step-3
 
-// >> START number-of-agent-in-queue-step-1
+// >> START number-of-agents-on-queue-step-1
 // Set environment
 const environment = platformClient.PureCloudRegionHosts[ORG_REGION];
 if(environment) client.setEnvironment(environment);
 
 client.loginClientCredentialsGrant(CLIENT_ID, CLIENT_SECRET)
-// >> END number-of-agent-in-queue-step-1
+// >> END number-of-agents-on-queue-step-1
 .then(() => {
     console.log('Authentication successful!');
     
@@ -120,4 +120,4 @@ client.loginClientCredentialsGrant(CLIENT_ID, CLIENT_SECRET)
     console.log(`Number of On-Queue Agents (${queueName}): ${count}`);
 })
 .catch((err) => console.log(err));
-// >> END number-of-agent-in-queue
+// >> END number-of-agents-on-queue

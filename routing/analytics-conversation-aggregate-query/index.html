@@ -1,4 +1,3 @@
-// >> START analytics-conversation-aggregate-query
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,6 +9,8 @@
 
 	</style>
 	<script type="text/javascript">
+	// >> START analytics-conversation-aggregate-query
+
 		// This client ID expects the redirect URL to be http://localhost:8080/
 		const clientId = GENESYS_CLOUD_CLIENT_ID;
 		const redirectUri = window.location.href;
@@ -91,10 +92,10 @@
 			return start.toISOString() + '/' + end.toISOString();
 		}
         // >> END analytics-conversation-aggregate-query-step-2
+	// >> END analytics-conversation-aggregate-query
 	</script>
 </head>
 <body>
 	<pre id="results"></pre>
 </body>
 </html>
-// >> END analytics-conversation-aggregate-query

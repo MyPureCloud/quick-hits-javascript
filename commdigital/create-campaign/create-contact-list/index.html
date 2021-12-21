@@ -1,0 +1,62 @@
+// >> START create-contact-list
+<html>
+<head>
+	<link href='https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css' rel='stylesheet' integrity='sha256-MfvZlkHCEqatNoGiOXveE8FIwMzZg4W85qfrfIFBfYc= sha512-dTfge/zgoMYpP7QbHy4gWMEGsbsdZeCXz7irItjcC3sPUFtf0kuFbDz/ixG7ArTxmDjLXDmezHubeNikyKGVyQ==' crossorigin='anonymous'>
+	
+	<script src='https://code.jquery.com/jquery-3.3.1.min.js' integrity='sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=' crossorigin='anonymous'></script>
+	<script src='https://sdk-cdn.mypurecloud.com/javascript/latest/purecloud-platform-client-v2.min.js'></script>
+
+	<script type='text/javascript'>
+		// This client ID expects the redirect URL to be http://localhost:8080/
+		const clientId = GENESYS_CLOUD_CLIENT_ID;
+		const redirectUri = window.location.href;
+
+		// Set Genesys Cloud objects
+		const platformClient = require('platformClient');
+		const client = platformClient.ApiClient.instance;
+		const outboundApi = new platformClient.OutboundApi();
+
+		// Set Genesys Cloud settings
+		client.setEnvironment('mypurecloud.com');
+		client.setPersistSettings(true, 'test_app');
+
+		$(document).ready(function() {
+            // >> START create-contact-list-step-1
+			// Authenticate with Genesys Cloud
+			client.loginImplicitGrant(clientId, redirectUri)
+				.then(() => {
+					console.log('Logged in');
+            // >> END create-contact-list-step-1
+
+                    // >> START create-contact-list-step-2
+					const contactListConfiguration = {
+						name: 'My Contact List',
+						columnNames: [
+							'First Name',
+							'Last Name',
+							'Home',
+							'Work',
+							'Cell',
+							'Contact ID'
+						],
+						phoneColumns: [
+							{ columnName: 'Cell', type: 'cell'},
+							{ columnName: 'Home', type: 'home'}
+						]
+					};
+                    // >> END create-contact-list-step-2
+
+					// Create contact list
+                    // >> START create-contact-list-step-3
+					return outboundApi.postOutboundContactlists(contactListConfiguration);
+				})
+				.then((contactList) => {
+					console.log('Contact list: ', contactList);
+				})
+                // >> END create-contact-list-step-3
+				.catch((err) => console.error(err));
+		});
+	</script>
+</head>
+</html>
+// >> END create-contact-list

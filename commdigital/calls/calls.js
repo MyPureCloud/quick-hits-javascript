@@ -237,7 +237,7 @@ function startConsult() {
 	conversationsApi.postConversationsCallParticipantConsult(callId, participantId, body)
 		.then(() => {
 			$('input#newparticipant').val('');
-			// We can ignore the response in this tutorial.
+			// We can ignore the response in this guide.
 		}).catch((err) => console.error(err));
 }
 // >> END calls-step-8
@@ -258,7 +258,7 @@ function consultSpeakTo(speakTo) {
 	// Invoke API
 	conversationsApi.patchConversationsCallParticipantConsult(callId, participantId, body)
 		.then(() => {
-			// We can ignore the response in this tutorial.
+			// We can ignore the response in this guide.
 		}).catch((err) => console.error(err));
 }
 // >> END calls-step-9

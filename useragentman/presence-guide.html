@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Presence Subscription</title>
+	
+	<link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+
+	<style type="text/css">
+		.row {
+			margin-top: 8px;
+		}
+	</style>
+
+	<script src="https://code.jquery.com/jquery-3.3.1.min.js" integrity="sha256-FgpCb/KJQlLNfOu91ta32o/NMZxltwRo8QtmkMRdAu8=" crossorigin="anonymous"></script>
+	<script src="https://sdk-cdn.mypurecloud.com/javascript/latest/purecloud-platform-client-v2.min.js"></script>
+
+	<script type="text/javascript">
+		// >> START presence-guide A guide on using the API to get and set the current user's presence and listen for changes.
+		// This client ID expects the redirect URL to be http://localhost:8080/
+		const clientId = 'babbc081-0761-4f16-8f56-071aa402ebcb';
+		const redirectUri = window.location.href;
+
+		// Set Genesys Cloud objects
+		const platformClient = require('platformClient');
+		const client = platformClient.ApiClient.instance;
+		const notificationsApi = new platformClient.NotificationsApi();
+		const presenceApi = new platformClient.PresenceApi();
+		const usersApi = new platformClient.UsersApi();
+
+		// Set Genesys Cloud settings
+		client.setEnvironment('mypurecloud.com');
+		client.setPersistSettings(true, 'test_app');
+
+		// Local vars
+		let presences = {};
+		let userPresenceTopic = '';
+		let webSocket = null;
+		let me, notificationChannel;
+
+		$(document).ready(() => {
+			// Authenticate with Genesys Cloud
+			client.loginImplicitGrant(clientId, redirectUri)
+				.then(() => {
+					console.log('Logged in');
+
+					// >> START presence-guide-step-1
+					// Get presences
+					return presenceApi.getPresencedefinitions({ pageSize: 100 });
+				})
+				.then((presenceListing) => {
+					console.log(`Found ${presenceListing.entities.length} presences`);
+
+					// Create button for each presence
+					presenceListing.entities.forEach((presence) => {
+						presences[presence.id] = presence;
+						$('div#presenceButtons').append($('<button>')
+							.addClass('btn btn-primary')
+							.click(() => setPresence(presence.id))
+							.text(presence.languageLabels.en_US)
+						);
+					});
+
+					// Get authenticated user's data, including current presence
+					return usersApi.getUsersMe({ expand: ['presence'] });
+				})
+				.then((userMe) => {
+					me = userMe;
+					// >> END presence-guide-step-1
+					
+					// Set current presence text in UI
+					$('#currentPresence').text(presences[me.presence.presenceDefinition.id].languageLabels.en_US);
+
+					// >> START presence-guide-step-2
+					// Create notification channel
+					return notificationsApi.postNotificationsChannels();
+				})
+				.then((channel) => {
+					console.log('channel: ', channel);
+					notificationChannel = channel;
+
+					// Set up web socket
+					webSocket = new WebSocket(notificationChannel.connectUri);
+					webSocket.onmessage = handleNotification;
+
+					// Subscribe to authenticated user's presence
+					userPresenceTopic = `v2.users.${me.id}.presence`;
+					const body = [ { id: userPresenceTopic } ];
+					return notificationsApi.putNotificationsChannelSubscriptions(notificationChannel.id, body);
+				})
+				.then((channel) => {
+					console.log('Channel subscriptions set successfully');
+					// >> END presence-guide-step-2
+				})
+				.catch((err) => console.error(err));
+		});
+
+		// >> START presence-guide-step-4
+		function setPresence(presenceId) {
+			console.log(`Setting presence to ${presences[presenceId].languageLabels.en_US} (${presenceId})`);
+
+			// Set presence
+			presenceApi.patchUserPresence(me.id, 'PURECLOUD', { presenceDefinition:{ id: presenceId } })
+				.then(() => {
+					console.log('Presence set successfully');
+				})
+				.catch((err) => console.error(err));
+		}
+		// >> END presence-guide-step-4
+
+		// >> START presence-guide-step-3
+		// Handle incoming Genesys Cloud notification from WebSocket
+		function handleNotification(message) {
+			// Parse notification string to a JSON object
+			const notification = JSON.parse(message.data);
+
+			// Discard unwanted notifications
+			if (notification.topicName.toLowerCase() === 'channel.metadata') {
+				// Heartbeat
+				console.info('Ignoring metadata: ', notification);
+				return;
+			} else if (notification.topicName.toLowerCase() !== userPresenceTopic.toLowerCase()) {
+				// Unexpected topic
+				console.warn('Unknown notification: ', notification);
+				return;
+			} else {
+				console.debug('Presence notification: ', notification);
+			}
+
+			// Set current presence text in UI
+			$('#currentPresence').text(presences[notification.eventBody.presenceDefinition.id].languageLabels.en_US);
+
+			// Log messages
+			$('div#messages').append($('<pre>').text(`${new Date().toLocaleTimeString()} - ${JSON.stringify(notification,null,2)}`));
+		}
+		// >> END presence-guide-step-3
+
+		// >> END presence-guide
+	</script>
+</head>
+<body>
+	<div class="container">
+		<div class="row">
+			<div class="col-sm-12">
+				Current presence: <span id="currentPresence"></span>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-12">
+				<label for="presenceButtons">Set Presence</label><br />
+				<div id="presenceButtons" class="btn-group"></div>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-12">
+				<p>
+					See information on using the notification service at <a href='http://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html' target="_blank">http://developer.mypurecloud.com/api/rest/v2/notifications/notification_service.html</a>
+				</p>
+			</div>
+		</div>
+		<div class="row">
+			<div class="col-sm-12">
+				<h1>Messages</h1>
+				<div id="messages"></div>
+			</div>
+		</div>
+	</div>
+</body>
+</html>

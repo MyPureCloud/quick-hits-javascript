@@ -12,7 +12,7 @@
     
 // >> START oauth-implicit-step-2  
     function getParameterByName(name) {
-        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        name = name.replace(/[\\[]/, "\\[").replace(/[\]]/, "\\]");
         var regex = new RegExp("[\\#&]" + name + "=([^&#]*)"),
           results = regex.exec(location.hash);
         return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));

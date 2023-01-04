@@ -1,6 +1,6 @@
 {
-  "name": "nodejs",
-  "version": "0.0.0",
+  "name": "oauth-auth-code",
+  "version": "1.0.0",
   "description": "",
   "main": "server.js",
   "scripts": {
@@ -10,11 +10,9 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "body-parser": "*",
-    "cookie-parser": "*",
-    "express": "*",
-    "node-fetch": "^2.6.1",
-    "request": "*",
-    "uuid": "*"
+    "axios": "^1.2.2",
+    "cookie-parser": "^1.4.6",
+    "express": "^4.18.2",
+    "uuid": "^9.0.0"
   }
 }

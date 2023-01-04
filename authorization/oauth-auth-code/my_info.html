@@ -3,7 +3,9 @@
     <title>NodeJS Authorization Code</title>
 
   <script src='//code.jquery.com/jquery-1.11.2.min.js'></script>
-  <script src="//cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+  <link rel="stylesheet"
+      href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+  <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
 
   <script>
 // >> START oauth-auth-code-step-4
@@ -11,18 +13,17 @@
    url: "/me",
    type: "GET",
    success: function(data) {
-       $('#data').text(JSON.stringify(data));
-
+       $('#data').text(JSON.stringify(data, null, 4));
+       hljs.highlightAll();
    }});
 // >> END oauth-auth-code-step-4
   </script>
 </head>
 <body>
     <h1>My Information</h1>
-    <pre class="prettyprint">
-        <code id='data' >
-        </code>
+    <pre>
+      <code id='data'>
+      </code>
     </pre>
-
 </body>
 </html>

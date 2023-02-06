@@ -4,6 +4,8 @@ const winston = require('winston');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const md5 = require('md5-file');
+const fs = require('fs');
+const archiver = require('archiver');
 
 const clientId = process.env.GENESYS_CLOUD_CLIENT_ID;
 const clientSecret = process.env.GENESYS_CLOUD_CLIENT_SECRET;
@@ -47,6 +49,27 @@ async function uploadRecordings(fileName) {
         let response = await client.loginClientCredentialsGrant(clientId, clientSecret);
         logger.verbose('Login successfully');
 // >> START ex-get-presigned-url
+
+        var output = fs.createWriteStream(fileName);
+        var archive = archiver('zip', {
+            store: true,
+            // uploaded zip file must be uncompressed, setting compression level to 0
+            zlib: { level: 0 }
+        });
+
+        archive.on('error', function(err) {
+            throw err;
+        });
+
+        archive.pipe(output);
+
+        // append files
+        archive.file('./call1.opus.bin', {name: 'call1.opus.bin'});
+        archive.file('./metadata.json', {name: 'metadata.json'});
+
+        // wait for streams to complete
+        archive.finalize();
+
         // Get base64-encoded 128-bit MD5 digest of the file content
         let md5sum = await md5(fileName);
         let md5Base64 = Buffer.from(md5sum, 'hex').toString('base64');

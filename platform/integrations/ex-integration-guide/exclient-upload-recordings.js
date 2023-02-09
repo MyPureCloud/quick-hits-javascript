@@ -4,6 +4,8 @@ const winston = require('winston');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const md5 = require('md5-file');
+const fs = require('fs');
+const archiver = require('archiver');
 
 const clientId = process.env.GENESYS_CLOUD_CLIENT_ID;
 const clientSecret = process.env.GENESYS_CLOUD_CLIENT_SECRET;
@@ -36,7 +38,8 @@ const logger = winston.createLogger({
 /* Demonstrate the process to upload recordings:
  *
  * Login OAuth client with client ID and secret
- * Load the file and create the MD5 hash
+ * Create zip with the recording and metadata file
+ * Load the zip file and create the MD5 hash
  * Obtain a presigned URL
  * Upload the file to the presigned URL
  * Catch and log any error
@@ -46,6 +49,28 @@ async function uploadRecordings(fileName) {
     try {
         let response = await client.loginClientCredentialsGrant(clientId, clientSecret);
         logger.verbose('Login successfully');
+
+// >> START ex-zip-file
+        var output = fs.createWriteStream(fileName);
+        var archive = archiver('zip', {
+            store: true,
+            // uploaded zip file must be uncompressed, setting compression level to 0
+            zlib: { level: 0 }
+        });
+
+        archive.on('error', function(err) {
+            logger.error(err);
+        });
+
+        archive.pipe(output);
+
+        // the recording and metadata file must be stored at the root level in the zip file
+        archive.file('./myfile.opus.bin', {name: 'myfile.opus.bin'});
+        archive.file('./metadata.json', {name: 'metadata.json'});
+
+        // wait for streams to complete
+        archive.finalize();
+// >> END ex-zip-file
 // >> START ex-get-presigned-url
         // Get base64-encoded 128-bit MD5 digest of the file content
         let md5sum = await md5(fileName);

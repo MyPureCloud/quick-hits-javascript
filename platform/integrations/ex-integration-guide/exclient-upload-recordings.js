@@ -38,7 +38,8 @@ const logger = winston.createLogger({
 /* Demonstrate the process to upload recordings:
  *
  * Login OAuth client with client ID and secret
- * Load the file and create the MD5 hash
+ * Create zip with the recording and metadata file
+ * Load the zip file and create the MD5 hash
  * Obtain a presigned URL
  * Upload the file to the presigned URL
  * Catch and log any error
@@ -48,8 +49,8 @@ async function uploadRecordings(fileName) {
     try {
         let response = await client.loginClientCredentialsGrant(clientId, clientSecret);
         logger.verbose('Login successfully');
-// >> START ex-get-presigned-url
 
+// >> START ex-zip-file
         var output = fs.createWriteStream(fileName);
         var archive = archiver('zip', {
             store: true,
@@ -58,18 +59,19 @@ async function uploadRecordings(fileName) {
         });
 
         archive.on('error', function(err) {
-            throw err;
+            logger.error(err);
         });
 
         archive.pipe(output);
 
-        // append files
-        archive.file('./call1.opus.bin', {name: 'call1.opus.bin'});
+        // the recording and metadata file must be stored at the root level in the zip file
+        archive.file('./myfile.opus.bin', {name: 'myfile.opus.bin'});
         archive.file('./metadata.json', {name: 'metadata.json'});
 
         // wait for streams to complete
         archive.finalize();
-
+// >> END ex-zip-file
+// >> START ex-get-presigned-url
         // Get base64-encoded 128-bit MD5 digest of the file content
         let md5sum = await md5(fileName);
         let md5Base64 = Buffer.from(md5sum, 'hex').toString('base64');

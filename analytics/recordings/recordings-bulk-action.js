@@ -107,7 +107,7 @@ function getRecordingJobs(){
         sortBy: 'userId', // or 'dateCreated'
         state: 'CANCELLED', // valid values FULFILLED, PENDING, READY, PROCESSING, CANCELLED, FAILED
         showOnlyMyJobs: true,
-        jobType: 'EXPORT' // or 'DELETE'
+        jobType: 'EXPORT' // or 'DELETE' or 'ARCHIVE'
     })
 }
 // >> END recordings-bulk-action-step-6

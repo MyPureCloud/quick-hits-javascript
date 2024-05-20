@@ -1,4 +1,4 @@
-// >> START outbound-filtered-export-contact-list This example demostrates initiating a filtered export of a contact list, specifying contact ids and downloading it
+// >> START outbound-filtered-export-contact-list This example demonstrates initiating a filtered export of a contact list, specifying contact ids and downloading it
 const requestp = require('request-promise');
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;

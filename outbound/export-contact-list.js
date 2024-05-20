@@ -1,4 +1,4 @@
-// >> START outbound-export-contact-list This example demostrates initiating an export of a contact list and downloading it
+// >> START outbound-export-contact-list This example demonstrates initiating an export of a contact list and downloading it
 const requestp = require('request-promise');
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;

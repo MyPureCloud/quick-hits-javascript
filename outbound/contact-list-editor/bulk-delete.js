@@ -1,4 +1,4 @@
-// >> START bulk-delete This example demostrates how to bulk delete contacts when specifying an ad-hoc filter
+// >> START bulk-delete This example demonstrates how to bulk delete contacts when specifying an ad-hoc filter
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;
 client.setEnvironment('Given environment');

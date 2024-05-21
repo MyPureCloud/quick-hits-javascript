@@ -1,4 +1,4 @@
-// >> START bulk-edit This example demonstrates how to bulk edit contacts when specifying an ad-hoc filter
+// >> START outbound-contact-bulk-edit This example demonstrates how to bulk edit contacts when specifying an ad-hoc filter
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;
 client.setEnvironment('Given environment');
@@ -60,4 +60,4 @@ bulkEdit(contactListId, body)
     .catch(err => {
         console.log("Error bulk editing contacts.", err);
     })
-// >> END bulk-edit
+// >> END outbound-contact-bulk-edit

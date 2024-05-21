@@ -1,4 +1,4 @@
-// >> START contact-search This example demonstrates how to search for contacts matching an existing filter, sorted by a column
+// >> START outbound-contact-search This example demonstrates how to search for contacts matching an existing filter, sorted by a column
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;
 client.setEnvironment('Given environment');
@@ -32,4 +32,4 @@ const searchContacts = function searchContacts(contactListId, body) {
 };
 
 searchContacts(contactListId, body);
-// >> END contact-search
+// >> END outbound-contact-search

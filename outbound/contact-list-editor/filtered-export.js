@@ -1,12 +1,15 @@
-// >> START outbound-export-contact-list This example demonstrates initiating an export of a contact list and downloading it
+// >> START outbound-filtered-export-contact-list This example demonstrates initiating a filtered export of a contact list, specifying contact ids and downloading it
 const requestp = require('request-promise');
 const platformClient = require('purecloud-platform-client-v2');
 const client = platformClient.ApiClient.instance;
 client.setEnvironment('Given environment');
 
-const exportContactList = function exportContactList(contactListId) {
+const exportContactList = function exportContactList(contactListId, body) {
     const outboundApi = new platformClient.OutboundApi();
-    outboundApi.getOutboundContactlistExport(contactListId, { download: 'false' })
+
+    body.download = 'false';
+
+    outboundApi.getOutboundContactlistExport(contactListId, body)
         .then(res => {
             const downloadUri = res.uri;
             return requestp({
@@ -30,6 +33,14 @@ const exportContactList = function exportContactList(contactListId) {
         });
 };
 
+const body = {
+    contactIds: [
+        "1",
+        "2",
+        "3"
+    ]
+};
+
 const clientId = 'Given Client ID';
 const clientSecret = 'Given Client secret';
 const contactListId = 'Given ContactListId';
@@ -37,7 +48,7 @@ client.loginClientCredentialsGrant(clientId, clientSecret)
     .then(() => {
         const outboundApi = new platformClient.OutboundApi();
         outboundApi.postOutboundContactlistExport(contactListId)
-            .then(() => exportContactList(contactListId));
+            .then(() => exportContactList(contactListId, body));
     })
     .catch((err) => console.log(err));
-// >> END outbound-export-contact-list
+// >> END outbound-filtered-export-contact-list

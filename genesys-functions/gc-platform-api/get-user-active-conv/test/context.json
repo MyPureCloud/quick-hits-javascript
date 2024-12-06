@@ -1,0 +1,11 @@
+{
+  "clientContext": {
+    "ININ-Correlation-Id": "99999999-9999-9999-9999-9999999999",
+    "ININ-Organization-Id": "99999999-9999-9999-9999-9999999999",
+    "ININ-User-Id": "99999999-9999-9999-9999-9999999999",
+    "UserAgent": "PureCloudIntegrations/1.0",
+    "x-gc-id": "YOUR_CLIENT_CREDENTIALS_OAUTH_CLIENT_ID",
+    "x-gc-secret": "YOUR_CLIENT_CREDENTIALS_OAUTH_CLIENT_SECRET",
+    "x-gc-region": "YOUR_GENESYS_CLOUD_REGION_mypurecloud.com"
+  }
+}

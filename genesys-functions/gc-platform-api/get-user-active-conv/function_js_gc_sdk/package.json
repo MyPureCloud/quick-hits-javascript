@@ -1,0 +1,16 @@
+{
+  "name": "gc-active-conversations-action",
+  "version": "1.0.0",
+  "type": "commonjs",
+  "scripts": {
+    "package": "sls package",
+    "local1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json"
+  },
+  "devDependencies": {
+    "serverless": "^3.39.0",
+    "typescript": "^5.6.3"
+  },
+  "dependencies": {
+    "purecloud-platform-client-v2": "^209.0.0"
+  }
+}

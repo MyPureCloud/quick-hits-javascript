@@ -1,0 +1,36 @@
+# Serverless Schema - https://www.serverless.com/framework/docs/providers/aws/guide/serverless.yml
+# See - https://github.com/serverless/serverless/blob/v2/docs/providers/aws/guide/functions.md
+
+service: function-jwe-decrypt-action-nodejs
+
+frameworkVersion: '3'
+
+configValidationMode: warn
+
+custom:
+  awsRegion: us-east-1
+  logLevel: DEBUG
+
+provider:
+  name: aws
+  deploymentBucket:
+    name: 'serverless-local-deploys'
+    maxPreviousDeploymentArtifacts: 10
+  versionFunctions: false
+  logRetentionInDays: 7
+  region: '${self:custom.awsRegion}'
+
+## Define all Functions and Resources in-line
+functions:
+  echo:
+    handler: src/index.handler
+    name: function-jwe-decrypt-action-nodejs
+    description: Genesys Cloud Function for JWE Encrypt and Decrypt
+    ## Runtime may be deprecated and need to be updated when using the example.
+    runtime: nodejs20.x
+    memorySize: 512
+    timeout: 15
+    architecture: arm64
+    tracing: PassThrough # optional, overwrite, can be 'Active' or 'PassThrough'
+    environment:
+      LogLevel: ${self:custom.logLevel}

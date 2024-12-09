@@ -5,7 +5,7 @@
   "type": "commonjs",
   "scripts": {
     "package": "sls package",
-    "local": "sls invoke local --function echo --path ../test/data.json --contextPath ../test/context.json"
+    "local1": "sls invoke local --function echo --path ../test/data.json --contextPath ../test/context.json"
   },
   "dependencies": {
     "node-jose": "^2.2.0"

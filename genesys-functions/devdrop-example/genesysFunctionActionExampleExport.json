@@ -1,0 +1,73 @@
+{
+  "name": "Genesys Function Customer Example - Exported 2024-02-27 @ 15:48 - Exported 2024-02-28 @ 14:51",
+  "integrationType": "function-data-actions",
+  "actionType": "custom",
+  "config": {
+    "request": {
+      "requestType": "POST",
+      "headers": {
+        "UserAgent": "PureCloudIntegrations/1.0",
+        "x-credentialsExamplePassword": "$!{credentials.example_password}"
+      },
+      "requestTemplate": "{ \"certificate\": \"$!{credentials.example_certificate_base64}\",\n  \"input1String\": \"$!{input.input1String}\",\n  \"input2Boolean\": $!{input.input2Boolean} \n#if( \"$!{input.input3Number}\" != \"\" )\n  ,  \"input3Number\": ${input.input3Number}\n#end\n}"
+    },
+    "response": {
+      "translationMap": {},
+      "translationMapDefaults": {},
+      "successTemplate": "${rawResult}"
+    }
+  },
+  "contract": {
+    "input": {
+      "inputSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+          "input1String": {
+            "description": "Example string input",
+            "type": "string"
+          },
+          "input2Boolean": {
+            "description": "Example boolean input",
+            "type": "boolean"
+          },
+          "input3Number": {
+            "description": "Example number input",
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "output": {
+      "successSchema": {
+        "$schema": "http://json-schema.org/draft-04/schema#",
+        "type": "object",
+        "properties": {
+          "echoInput1": {
+            "description": "Echo of example string input",
+            "type": "string"
+          },
+          "echoInput2": {
+            "description": "Echo of example boolean input",
+            "type": "boolean"
+          },
+          "echoInput3": {
+            "description": "Echo of example number input",
+            "type": "number"
+          },
+          "certificateLength": {
+            "description": "Length in bytes of the certificate value. Zero if no certificate found.",
+            "type": "number"
+          },
+          "passwordLength": {
+            "description": "Length in bytes of the password. Zero if no password found.",
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "secure": false
+}

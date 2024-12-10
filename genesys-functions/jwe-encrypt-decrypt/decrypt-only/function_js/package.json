@@ -1,0 +1,16 @@
+{
+  "name": "jwe-decrypt-action",
+  "version": "1.0.0",
+  "description": "",
+  "type": "commonjs",
+  "scripts": {
+    "package": "sls package",
+    "local1": "sls invoke local --function echo --path ../test/data.json --contextPath ../test/context.json"
+  },
+  "dependencies": {
+    "node-jose": "^2.2.0"
+  },
+  "devDependencies": {
+    "serverless": "^3.39.0"
+  }
+}

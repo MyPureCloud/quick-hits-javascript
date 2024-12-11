@@ -4,7 +4,7 @@ The JWE Encrypt and Decrypt examples expect some custom credentials at the Genes
 * PUBLIC_KEY: Public Key to perform the JWE Encryption
 * PRIVATE_KEY: Private Key to perform the JWE Decryption
 
-Below are sample values of a Publi Key and Private Key that you can set for these variables.
+Below are sample values of a Public Key and Private Key that you can set for these variables.
 
 *"PUBLIC_KEY"*: "-----BEGIN PUBLIC KEY-----MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA8JhmO71HZ1vb8uxKhw6MM+ZvtTmc9Tw6AFpJVgXKiTjebj1SPdnxhdhJ5Bj15RN0rGNACXhAyUdn7zsp66/tmjNuC91L+9PvQBjDbXLsx7XUV9nIGJ3aYO5/qruVNXwyemf7wlwZVDF7oeZ8JUfjABTg7a7xui2WdXDHgvhTQdvQ9TS0NkX9xWAiDSn/HWfoEBC7TLeKeVjHsT7g1JnskGxfVhFrLfxQCxYZle4ebXP7dCPsff4WNNCxzBQtHHt8iEoZ0SVKBzS5zhdLHIdAIW4ELdnYsM7iTlWZO+kfWnlV2i13lAJobhxOAqwsg4OqkTsrx0KtWfZH40bNtFzx8wIDAQAB-----END PUBLIC KEY-----"
 

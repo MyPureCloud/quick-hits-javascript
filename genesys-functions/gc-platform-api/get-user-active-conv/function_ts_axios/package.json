@@ -6,7 +6,7 @@
     "compile": "tsc",
     "build": "rm -fr dist/* && npm run compile",
     "package": "sls package",
-    "local1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json"
+    "localtest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",

@@ -5,8 +5,8 @@
   "type": "commonjs",
   "scripts": {
     "package": "sls package",
-    "local1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
-    "local2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
+    "localtest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
+    "localtest2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
   },
   "devDependencies": {
     "serverless": "^3.39.0",

@@ -4,13 +4,13 @@
   "description": "",
   "type": "commonjs",
   "scripts": {
-    "package": "sls package",
-    "localtest1": "sls invoke local --function echo --path ../test/data.json --contextPath ../test/context.json"
+    "zip": "zip -r function-jwe-decrypt-action.zip src/ node_modules/",
+    "zipnodev": "npm install --omit=dev && zip -r function-jwe-decrypt-action.zip src/ node_modules/ && npm install",
+    "localtest1": "node ../test/test_function_js.mjs ../test/data.json ../test/context.json",
+    "slspackage": "sls package",
+    "slslocaltest1": "sls invoke local --function echo --path ../test/data.json --contextPath ../test/context.json"
   },
   "dependencies": {
     "node-jose": "^2.2.0"
-  },
-  "devDependencies": {
-    "serverless": "^3.39.0"
   }
 }

@@ -1,0 +1,8 @@
+{
+  "name": "devdrop-example",
+  "version": "1.0.0",
+  "description": "devdrop-example",
+  "scripts": {
+    "zip": "zip -r function-devdrop-example.zip src/"
+  }
+}

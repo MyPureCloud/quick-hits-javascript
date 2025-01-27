@@ -4,13 +4,13 @@
   "description": "",
   "type": "commonjs",
   "scripts": {
-    "package": "sls package",
-    "localtest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
-    "localtest2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
-  },
-  "devDependencies": {
-    "serverless": "^3.39.0",
-    "typescript": "^5.6.3"
+    "zip": "zip -r function-jwe-encrypt-decrypt-action.zip src/ node_modules/",
+    "zipnodev": "npm install --omit=dev && zip -r function-jwe-encrypt-decrypt-action.zip src/ node_modules/ && npm install",
+    "localtest1": "node ../test/test_function_js.mjs ../test/data1.json ../test/context.json",
+    "localtest2": "node ../test/test_function_js.mjs ../test/data2.json ../test/context.json",
+    "slspackage": "sls package",
+    "slslocaltest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
+    "slslocaltest2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
   },
   "dependencies": {
     "node-jose": "^2.2.0"

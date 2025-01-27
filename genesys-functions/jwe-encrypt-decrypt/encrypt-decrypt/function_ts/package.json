@@ -6,16 +6,19 @@
   "scripts": {
     "compile": "tsc",
     "build": "rm -fr dist/* && npm run compile",
-    "package": "sls package",
-    "localtest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
-    "localtest2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
+    "zip": "zip -r function-jwe-encrypt-decrypt-action.zip dist/ node_modules/",
+    "zipnodev": "npm install --omit=dev && zip -r function-jwe-encrypt-decrypt-action.zip dist/ node_modules/ && npm install",
+    "localtest1": "node ../test/test_function_ts.mjs ../test/data1.json ../test/context.json",
+    "localtest2": "node ../test/test_function_ts.mjs ../test/data2.json ../test/context.json",
+    "slspackage": "sls package",
+    "slslocaltest1": "sls invoke local --function echo --path ../test/data1.json --contextPath ../test/context.json",
+    "slslocaltest2": "sls invoke local --function echo --path ../test/data2.json --contextPath ../test/context.json"
   },
   "devDependencies": {
     "@tsconfig/node20": "^20.1.2",
     "@types/aws-lambda": "^8.10.145",
     "@types/node": "^22.9.0",
     "@types/node-jose": "^1.1.13",
-    "serverless": "^3.39.0",
     "typescript": "^5.6.3"
   },
   "dependencies": {

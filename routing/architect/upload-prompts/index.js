@@ -42,17 +42,26 @@ client.loginClientCredentialsGrant(CLIENT_ID, CLIENT_SECRET)
 		});
 	})
 		// >> END upload-prompts-step-3
-	// >> START upload-prompts-step-4
+	// >> START request-presigned-url-step-4
 	.then((promptResource) => {
 		console.log(promptResource);
+		console.log('Requesting presigned url...');
+
+		return architectApi.postArchitectPromptResourceUploads(promptResource.promptId, promptResource.language)
+	})
+	// >> END request-presigned-url-step-4
+	// >> START upload-prompts-step-5
+	.then((presignedUrlResponse) => {
+		console.log(presignedUrlResponse);
 		console.log('Uploading prompt...');
 
 		const form = new FormData();
 		form.append('file', fs.createReadStream('../prompt-example.wav'));
 
-		return axios.post(promptResource.uploadUri, form, {
+		return axios.post(presignedUrlResponse.url, form, {
 			headers: {
 				'Authorization': 'bearer ' + client.authData.accessToken,
+				...presignedUrlResponse.headers,
 				...form.getHeaders()
 			}
 		});
@@ -62,6 +71,6 @@ client.loginClientCredentialsGrant(CLIENT_ID, CLIENT_SECRET)
 		console.log('https://apps.mypurecloud.com/architect/#/call/userprompts');
 		console.log(res.data);
 	})
-	// >> END upload-prompts-step-4
+	// >> END upload-prompts-step-5
 	.catch((err) => console.log(err));
 // >> END upload-prompts

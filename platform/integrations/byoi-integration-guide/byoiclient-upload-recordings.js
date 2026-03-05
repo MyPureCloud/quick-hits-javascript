@@ -1,0 +1,131 @@
+const platformClient = require('purecloud-platform-client-v2');
+const winston = require('winston');
+
+const fetch = require('node-fetch');
+const fs = require('fs');
+const md5 = require('md5-file');
+const fs = require('fs');
+const archiver = require('archiver');
+
+const clientId = process.env.GENESYS_CLOUD_CLIENT_ID;
+const clientSecret = process.env.GENESYS_CLOUD_CLIENT_SECRET;
+
+// Set the Genesys Cloud region
+const client = platformClient.ApiClient.instance;
+client.setEnvironment(platformClient.PureCloudRegionHosts.us_east_1);
+
+// Create API instance
+const uploadsApi = new platformClient.UploadsApi();
+
+// Use winston for logging
+const logger = winston.createLogger({
+    level: 'info',
+    format: winston.format.combine(
+        winston.format.timestamp(), winston.format.prettyPrint()
+    ),
+    transports: [
+        new winston.transports.File({
+            filename: `./byoiclient-upload-recordings.log`,
+        }),
+        // Output to console for error logs
+        new winston.transports.Console({
+            level: 'error',
+        })
+    ]
+});
+
+
+/* Demonstrate the process to upload recordings:
+ *
+ * Login OAuth client with client ID and secret
+ * Create zip with the recording and metadata file
+ * Load the zip file and create the MD5 hash
+ * Obtain a presigned URL
+ * Upload the file to the presigned URL
+ * Catch and log any error
+ */
+
+async function uploadRecordings(fileName) {
+    try {
+        let response = await client.loginClientCredentialsGrant(clientId, clientSecret);
+        logger.verbose('Login successfully');
+
+// >> START byoi-zip-file
+        var output = fs.createWriteStream(fileName);
+        var archive = archiver('zip', {
+            store: true,
+            // uploaded zip file must be uncompressed, setting compression level to 0
+            zlib: { level: 0 }
+        });
+
+        archive.on('error', function(err) {
+            logger.error(err);
+        });
+
+        archive.pipe(output);
+
+        // the recording and metadata file must be stored at the root level in the zip file
+        archive.file('./myfile.opus.bin', {name: 'myfile.opus.bin'});
+        archive.file('./metadata.json', {name: 'metadata.json'});
+
+        // wait for streams to complete
+        archive.finalize();
+// >> END byoi-zip-file
+// >> START byoi-get-presigned-url
+        // Get base64-encoded 128-bit MD5 digest of the file content
+        let md5sum = await md5(fileName);
+        let md5Base64 = Buffer.from(md5sum, 'hex').toString('base64');
+        logger.verbose(md5Base64);
+
+        // Get the presigned URL
+        // signedUrlTimeoutSeconds is optional for the number of seconds the presigned URL is valid for (1-604800).
+        // The default value is 600 seconds if it is not provided
+        response = await uploadsApi.postUploadsRecordings({
+            'fileName': fileName,
+            'contentMd5': md5Base64,
+            'signedUrlTimeoutSeconds': 600
+        });
+        logger.info(response);
+// >> END byoi-get-presigned-url
+        // Get the presigned URL from the response
+        let presignedUploadUrl = response.url;
+        // Save the headers in returned response for the following upload
+        let responseHeaders = response.headers;
+// >> START byoi-upload-file
+        // Upload the file to the presigned URL
+        const fileContent = fs.readFileSync(fileName);
+        logger.info(`Upload ${fileName} to the presigned URL`)
+        response = await fetch(presignedUploadUrl, {
+            method: 'PUT',
+            headers: responseHeaders,
+            body: fileContent
+            });
+        let responseBody = await response.text();
+        logger.info(responseBody);
+        return responseBody;
+// >> END byoi-upload-file
+    }
+    catch(err) {
+        // Directly logging an error in winston would result in empty string
+        if (err instanceof Error) {
+            logger.error(`${err.stack || err}`);
+        }
+        // Handle failure response
+        else {
+            logger.error(err);
+        }
+    }
+}
+
+// The recording file to be uploaded
+/* Note: The recording file and metadata.json shall be at the top level of the zip file.
+   Zipping up the folder that contains the recording file and the metadata.json would cause a validation failure
+
+   recordingExample.zip
+     |--- audioExampleRecording.opus.bin
+     |--- metadata.json
+ */
+
+const fileName = 'recordingExample.zip';
+
+uploadRecordings(fileName);

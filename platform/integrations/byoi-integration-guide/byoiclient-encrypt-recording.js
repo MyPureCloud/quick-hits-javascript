@@ -3,7 +3,6 @@ const platformClient = require('purecloud-platform-client-v2');
 const winston = require('winston');
 const fs = require('fs');
 const path = require('path')
-const forge = require('node-forge');
 const {spawn} = require('child_process');
 
 const clientId = process.env.GENESYS_CLOUD_CLIENT_ID;
@@ -67,39 +66,74 @@ async function convertDerToRSAPublicKey(opensslPath, derFileName, pemFileName) {
     });
 }
 
-// Generate a key pair and save the certificate
-async function generateX509Certificate(keyId, pemFileName, certFileName) {
-    
-    // The key length must be 2048
-    var keys = forge.pki.rsa.generateKeyPair(2048);
+// Run an OpenSSL command and return a promise that resolves to true on success
+function runOpenssl(opensslPath, parameters) {
+    return new Promise((resolve) => {
+        let opensslProcess = spawn(opensslPath, parameters);
+        opensslProcess.on('close', (code) => {
+            if (code == 0) {
+                resolve(true);
+            } else {
+                logger.error(`OpenSSL returned ${code} for command: openssl ${parameters[0]}`);
+                resolve(false);
+            }
+        });
+    });
+}
 
-    // Replace the RSA public key
-    let pemBody = fs.readFileSync(pemFileName);
-    keys.publicKey = forge.pki.publicKeyFromPem(pemBody);
+// Generate an X509 certificate embedding the Genesys public key, using OpenSSL (FIPS-validated module) with SHA-256 signing
+async function generateX509Certificate(opensslPath, keyId, pemFileName, certFileName) {
+    let throwawayKeyFile = certFileName.replace('.cert.pem', '.throwaway.key');
+    let csrFile = certFileName.replace('.cert.pem', '.csr');
 
-    // Generate X509 certificate with new public key
-    var cert = forge.pki.createCertificate();
-    cert.publicKey = keys.publicKey;
+    // Serial number must start with "00" and not contain dashes
+    let serialHex = '0x00' + keyId.replace(/-/g, '');
 
-    // Make sure the serialNumber starts with "00" and does not contain '-'
-    cert.serialNumber = '00' + keyId.replace(/-/g, '');
+    // Step 1: Generate a throwaway 2048-bit RSA private key for certificate signing
+    let success = await runOpenssl(opensslPath, [
+        'genpkey', '-algorithm', 'RSA',
+        '-pkeyopt', 'rsa_keygen_bits:2048',
+        '-out', throwawayKeyFile
+    ]);
+    if (!success) return false;
 
-    // Sign the X509 certificate
-    cert.sign(keys.privateKey);
+    // Step 2: Create a certificate signing request using the throwaway key
+    success = await runOpenssl(opensslPath, [
+        'req', '-new',
+        '-key', throwawayKeyFile,
+        '-subj', '/CN=recording-encryption',
+        '-out', csrFile
+    ]);
+    if (!success) return false;
 
-    // Save the certificate pem file
-    let certificatePem = forge.pki.certificateToPem(cert);
-    var stream = fs.createWriteStream(certFileName);
-    stream.write(certificatePem);
+    // Step 3: Create self-signed cert with the Genesys public key forced in, signed with SHA-256
+    success = await runOpenssl(opensslPath, [
+        'x509', '-req',
+        '-in', csrFile,
+        '-force_pubkey', pemFileName,
+        '-signkey', throwawayKeyFile,
+        '-set_serial', serialHex,
+        '-sha256',
+        '-days', '1',
+        '-out', certFileName
+    ]);
+
+    // Clean up throwaway intermediate files
+    try { fs.unlinkSync(throwawayKeyFile); } catch(e) { /* ignore */ }
+    try { fs.unlinkSync(csrFile); } catch(e) { /* ignore */ }
+
+    return success;
 }
 // >> END byoi-generate-intermediate-key
 // >> START byoi-perform-encryption
-// Invoke openssl command to encrypt the file using the certificate file
+// Invoke openssl command to encrypt the file using the certificate file (FIPS 140-3 compliant: AES-256-GCM + RSA-OAEP)
 async function performEncryption(opensslPath, x509CertificateFilePath, originalFilePath, outputFilePath) {
     return new Promise((resolve, reject) => {
-        // openssl cms -encrypt -aes256 -in audio.opus -binary -outform DER -out audio.opus.bin f36f8c85-8922-45fa-a3f1-d197d1176340.cert.pem
+        // openssl cms -encrypt -aes-256-gcm -keyopt rsa_padding_mode:oaep -in audio.opus -binary -outform DER -out audio.opus.bin cert.pem
         let parameters = [
-            'cms', '-encrypt', '-aes256',
+            'cms', '-encrypt',
+            '-aes-256-gcm',
+            '-keyopt', 'rsa_padding_mode:oaep',
             '-in', originalFilePath,
             '-binary', '-outform', 'DER',
             '-out', outputFilePath, x509CertificateFilePath
@@ -168,7 +202,7 @@ async function encryptRecording(recordingAudioFile) {
 
         // Generate X509 certificate and save the certificate as .cert.pem file
         let certFileName = path.join(workingDir, keyId + '.cert.pem');
-        generateX509Certificate(keyId, pemFileName, certFileName);
+        await generateX509Certificate(opensslPath, keyId, pemFileName, certFileName);
         logger.verbose(`Generated X509 certificate file: ${certFileName}`);
 
         // Perform CMS encryption using the certificate file

@@ -129,14 +129,22 @@ async function generateX509Certificate(opensslPath, keyId, pemFileName, certFile
 // Invoke openssl command to encrypt the file using the certificate file (FIPS 140-3 compliant: AES-256-GCM + RSA-OAEP)
 async function performEncryption(opensslPath, x509CertificateFilePath, originalFilePath, outputFilePath) {
     return new Promise((resolve, reject) => {
-        // openssl cms -encrypt -aes-256-gcm -keyopt rsa_padding_mode:oaep -in audio.opus -binary -outform DER -out audio.opus.bin cert.pem
+        // openssl cms -encrypt -aes-256-gcm -recip f36f8c85-8922-45fa-a3f1-d197d1176340.cert.pem -keyopt rsa_padding_mode:oaep -keyopt rsa_oaep_md:sha256 -in audio.opus -binary -outform DER -out audio.opus.bin
+        // The recipient certificate must be supplied with -recip and must appear BEFORE -keyopt.
+        // -keyopt applies to the preceding recipient, so passing the certificate as a trailing
+        // argument instead would make OpenSSL fail with "No key specified".
+        // rsa_oaep_md:sha256 is required as well as rsa_padding_mode:oaep. Without it OpenSSL omits the
+        // RSAESOAEPparams from the CMS envelope, which means SHA-1 by default (RFC 8017), and Genesys Cloud
+        // will not be able to decrypt the recording. Both flags require OpenSSL 3.0 or later.
         let parameters = [
             'cms', '-encrypt',
             '-aes-256-gcm',
+            '-recip', x509CertificateFilePath,
             '-keyopt', 'rsa_padding_mode:oaep',
+            '-keyopt', 'rsa_oaep_md:sha256',
             '-in', originalFilePath,
             '-binary', '-outform', 'DER',
-            '-out', outputFilePath, x509CertificateFilePath
+            '-out', outputFilePath
         ];
 
         let opensslProcess = spawn(opensslPath, parameters);

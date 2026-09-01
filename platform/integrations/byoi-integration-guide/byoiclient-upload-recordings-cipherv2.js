@@ -49,7 +49,7 @@ async function uploadRecordings(fileName) {
         let response = await client.loginClientCredentialsGrant(clientId, clientSecret);
         logger.verbose('Login successfully');
 
-// >> START byoi-zip-file
+// >> START byoi-zip-file-cipherv2
         var output = fs.createWriteStream(fileName);
         var archive = archiver('zip', {
             store: true,
@@ -69,8 +69,8 @@ async function uploadRecordings(fileName) {
 
         // wait for streams to complete
         archive.finalize();
-// >> END byoi-zip-file
-// >> START byoi-get-presigned-url
+// >> END byoi-zip-file-cipherv2
+// >> START byoi-get-presigned-url-cipherv2
         // Get base64-encoded 128-bit MD5 digest of the file content
         let md5sum = await md5(fileName);
         let md5Base64 = Buffer.from(md5sum, 'hex').toString('base64');
@@ -85,12 +85,12 @@ async function uploadRecordings(fileName) {
             'signedUrlTimeoutSeconds': 600
         });
         logger.info(response);
-// >> END byoi-get-presigned-url
+// >> END byoi-get-presigned-url-cipherv2
         // Get the presigned URL from the response
         let presignedUploadUrl = response.url;
         // Save the headers in returned response for the following upload
         let responseHeaders = response.headers;
-// >> START byoi-upload-file
+// >> START byoi-upload-file-cipherv2
         // Upload the file to the presigned URL
         const fileContent = fs.readFileSync(fileName);
         logger.info(`Upload ${fileName} to the presigned URL`)
@@ -102,7 +102,7 @@ async function uploadRecordings(fileName) {
         let responseBody = await response.text();
         logger.info(responseBody);
         return responseBody;
-// >> END byoi-upload-file
+// >> END byoi-upload-file-cipherv2
     }
     catch(err) {
         // Directly logging an error in winston would result in empty string

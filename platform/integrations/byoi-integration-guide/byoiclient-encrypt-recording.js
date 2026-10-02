@@ -168,7 +168,7 @@ async function encryptRecording(recordingAudioFile) {
 
         // Generate X509 certificate and save the certificate as .cert.pem file
         let certFileName = path.join(workingDir, keyId + '.cert.pem');
-        generateX509Certificate(keyId, pemFileName, certFileName);
+        await generateX509Certificate(keyId, pemFileName, certFileName);
         logger.verbose(`Generated X509 certificate file: ${certFileName}`);
 
         // Perform CMS encryption using the certificate file

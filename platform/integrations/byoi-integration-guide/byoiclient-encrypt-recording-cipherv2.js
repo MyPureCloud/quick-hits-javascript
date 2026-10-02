@@ -81,45 +81,45 @@ function runOpenssl(opensslPath, parameters) {
     });
 }
 
-// Generate an X509 certificate embedding the Genesys public key, using OpenSSL (FIPS-validated module) with SHA-256 signing
+// Generate an X509 certificate embedding the public key fetched from Genesys Cloud, using OpenSSL (FIPS-validated module) with SHA-256 signing
 async function generateX509Certificate(opensslPath, keyId, pemFileName, certFileName) {
-    let throwawayKeyFile = certFileName.replace('.cert.pem', '.throwaway.key');
+    let temporaryKeyFile = certFileName.replace('.cert.pem', '.temporary.key');
     let csrFile = certFileName.replace('.cert.pem', '.csr');
 
     // Serial number must start with "00" and not contain dashes
     let serialHex = '0x00' + keyId.replace(/-/g, '');
 
-    // Step 1: Generate a throwaway 2048-bit RSA private key for certificate signing
+    // Step 1: Generate a temporary 2048-bit RSA private key for certificate signing
     let success = await runOpenssl(opensslPath, [
         'genpkey', '-algorithm', 'RSA',
         '-pkeyopt', 'rsa_keygen_bits:2048',
-        '-out', throwawayKeyFile
+        '-out', temporaryKeyFile
     ]);
     if (!success) return false;
 
-    // Step 2: Create a certificate signing request using the throwaway key
+    // Step 2: Create a certificate signing request using the temporary key
     success = await runOpenssl(opensslPath, [
         'req', '-new',
-        '-key', throwawayKeyFile,
+        '-key', temporaryKeyFile,
         '-subj', '/CN=recording-encryption',
         '-out', csrFile
     ]);
     if (!success) return false;
 
-    // Step 3: Create self-signed cert with the Genesys public key forced in, signed with SHA-256
+    // Step 3: Create self-signed cert with the public key fetched from Genesys Cloud forced in, signed with SHA-256
     success = await runOpenssl(opensslPath, [
         'x509', '-req',
         '-in', csrFile,
         '-force_pubkey', pemFileName,
-        '-signkey', throwawayKeyFile,
+        '-signkey', temporaryKeyFile,
         '-set_serial', serialHex,
         '-sha256',
         '-days', '1',
         '-out', certFileName
     ]);
 
-    // Clean up throwaway intermediate files
-    try { fs.unlinkSync(throwawayKeyFile); } catch(e) { /* ignore */ }
+    // Clean up temporary intermediate files
+    try { fs.unlinkSync(temporaryKeyFile); } catch(e) { /* ignore */ }
     try { fs.unlinkSync(csrFile); } catch(e) { /* ignore */ }
 
     return success;

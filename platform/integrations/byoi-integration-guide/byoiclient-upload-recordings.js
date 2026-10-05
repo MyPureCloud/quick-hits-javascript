@@ -4,7 +4,6 @@ const winston = require('winston');
 const fetch = require('node-fetch');
 const fs = require('fs');
 const md5 = require('md5-file');
-const fs = require('fs');
 const archiver = require('archiver');
 
 const clientId = process.env.GENESYS_CLOUD_CLIENT_ID;
